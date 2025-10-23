@@ -51,8 +51,9 @@
         const statusDiv = document.getElementById('status');
         const boardsContainer = document.getElementById('boards-container');
 
-        // !!! ВАЖНО: ЗАМЕНИТЕ ЭТУ ССЫЛКУ НА ВАШУ !!!
-        const BACKEND_URL = 'https://exploreandbook-legal.netlify.app/.netlify/functions/pinterest-token';
+        // ✅ URL ваших Netlify функций
+        const TOKEN_URL = 'https://exploreandbook-legal.netlify.app/.netlify/functions/pinterest-token';
+        const PROXY_URL = 'https://exploreandbook-legal.netlify.app/.netlify/functions/pinterest-proxy';
         
         // 1. Получаем параметры из URL
         const urlParams = new URLSearchParams(window.location.search);
@@ -76,14 +77,13 @@
 
         // Функция для обмена кода на токен
         function exchangeCodeForToken(authCode) {
-            fetch(BACKEND_URL, {
+            fetch(TOKEN_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ code: authCode })
             })
             .then(response => {
                 if (!response.ok) {
-                    // Если сервер вернул ошибку, пытаемся прочитать ее
                     return response.json().then(err => Promise.reject(err));
                 }
                 return response.json();
@@ -98,7 +98,6 @@
                     fetchAndDisplayBoards(data.access_token);
 
                 } else {
-                    // Если в ответе нет токена
                     throw new Error('Access token was not received.');
                 }
             })
@@ -106,25 +105,35 @@
                 statusDiv.className = 'status error';
                 const errorMessage = err.message || err.error_description || 'Unknown error during token exchange.';
                 statusDiv.textContent = `❌ Error: ${errorMessage}`;
+                console.error('Token exchange error:', err);
             });
         }
 
-        // 5. Функция для получения и отображения досок
+        // 5. Функция для получения и отображения досок (ЧЕРЕЗ ПРОКСИ!)
         function fetchAndDisplayBoards(accessToken) {
             boardsContainer.innerHTML = '<h3>Loading your boards...</h3>';
 
-            fetch('https://api.pinterest.com/v5/boards', {
+            // ✅ Теперь запрос идет через ваш бэкенд, а не напрямую к Pinterest
+            fetch(`${PROXY_URL}?endpoint=boards`, {
+                method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${accessToken}`
                 }
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => Promise.reject(err));
+                }
+                return response.json();
+            })
             .then(data => {
+                console.log('Boards data:', data); // для отладки
+                
                 if (data.items) {
                     let boardsHtml = '<h3>Your Pinterest Boards:</h3><ul id="boards-list">';
                     if (data.items.length > 0) {
                         data.items.forEach(board => {
-                            boardsHtml += `<li>${board.name}</li>`;
+                            boardsHtml += `<li><strong>${board.name}</strong><br><small>${board.description || 'No description'}</small></li>`;
                         });
                     } else {
                         boardsHtml += '<li>You have no boards yet.</li>';
@@ -132,11 +141,12 @@
                     boardsHtml += '</ul>';
                     boardsContainer.innerHTML = boardsHtml;
                 } else {
-                    throw new Error (data.message || 'Could not parse boards data.');
+                    throw new Error(data.message || 'Could not parse boards data.');
                 }
             })
             .catch(err => {
-                boardsContainer.innerHTML = `<p class="error">Failed to load boards: ${err.message}</p>`;
+                console.error('Boards fetch error:', err);
+                boardsContainer.innerHTML = `<p class="error">Failed to load boards: ${err.message || 'Unknown error'}</p>`;
             });
         }
     </script>
