@@ -39,158 +39,153 @@
             border-radius: 5px;
             margin-bottom: 8px;
             border-left: 5px solid #bd081c;
+            cursor: pointer;
+            transition: all 0.2s;
         }
-        .debug {
-            margin-top: 20px;
-            padding: 10px;
-            background: #f0f0f0;
-            border-radius: 5px;
-            text-align: left;
-            font-size: 12px;
+        #boards-list li:hover {
+            background: #ececec;
+            transform: translateX(5px);
+        }
+        .board-name {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+        }
+        .board-desc {
+            font-size: 14px;
             color: #666;
+            margin-top: 5px;
+        }
+        .board-stats {
+            font-size: 12px;
+            color: #999;
+            margin-top: 5px;
         }
     </style>
 </head>
 <body>
-    <h1>🔗 Connecting to Pinterest</h1>
-    <div id="status" class="loading">Processing authorization...</div>
+    <h1>🎉 Deal Inspiration Hub</h1>
+    <div id="status" class="loading">Connecting to your Pinterest account...</div>
     <div id="boards-container"></div>
-    <div id="debug" class="debug"></div>
 
     <script>
         const statusDiv = document.getElementById('status');
         const boardsContainer = document.getElementById('boards-container');
-        const debugDiv = document.getElementById('debug');
 
-        // ✅ URL ваших Netlify функций
+        // Backend URLs
         const TOKEN_URL = 'https://exploreandbook-legal.netlify.app/.netlify/functions/pinterest-token';
         const PROXY_URL = 'https://exploreandbook-legal.netlify.app/.netlify/functions/pinterest-proxy';
         
-        function addDebug(message) {
-            const time = new Date().toLocaleTimeString();
-            debugDiv.innerHTML += `[${time}] ${message}<br>`;
-            console.log(message);
-        }
-
-        addDebug('🚀 Script started');
-        addDebug(`Token URL: ${TOKEN_URL}`);
-        addDebug(`Proxy URL: ${PROXY_URL}`);
-
-        // 1. Получаем параметры из URL
+        // Получаем параметры из URL
         const urlParams = new URLSearchParams(window.location.search);
         const code = urlParams.get('code');
         const error = urlParams.get('error');
 
-        addDebug(`Code: ${code ? 'received' : 'missing'}`);
-        addDebug(`Error: ${error || 'none'}`);
-
-        // 2. Проверяем, есть ли ошибка или код авторизации
+        // Обработка ответа от Pinterest
         if (error) {
             statusDiv.className = 'status error';
             statusDiv.textContent = `❌ Authorization failed: ${error}`;
-            addDebug(`❌ Authorization error: ${error}`);
         } else if (code) {
-            statusDiv.className = 'status loading';
-            statusDiv.textContent = '✅ Code received. Exchanging for access token...';
-            addDebug('📤 Sending code to backend...');
-            
-            // 3. Отправляем код на наш безопасный бэкенд
             exchangeCodeForToken(code);
         } else {
             statusDiv.className = 'status error';
             statusDiv.textContent = '❌ No authorization code found.';
-            addDebug('❌ No code in URL parameters');
         }
 
-        // Функция для обмена кода на токен
+        // Обмен кода на токен
         function exchangeCodeForToken(authCode) {
-            addDebug(`🔄 Calling TOKEN_URL with code...`);
-            
             fetch(TOKEN_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ code: authCode })
             })
             .then(response => {
-                addDebug(`📥 Token response status: ${response.status}`);
                 if (!response.ok) {
                     return response.json().then(err => Promise.reject(err));
                 }
                 return response.json();
             })
             .then(data => {
-                addDebug(`✅ Token received: ${data.access_token ? 'YES' : 'NO'}`);
-                
                 if (data.access_token) {
                     statusDiv.className = 'status success';
-                    statusDiv.textContent = '🎉 Successfully connected! Fetching your boards...';
+                    statusDiv.textContent = '✅ Connected successfully! Loading your boards...';
                     
-                    // 4. Сохраняем токен и запрашиваем доски
                     localStorage.setItem('pinterest_access_token', data.access_token);
-                    addDebug(`💾 Token saved to localStorage`);
                     
-                    fetchAndDisplayBoards(data.access_token);
+                    // Небольшая задержка для UX
+                    setTimeout(() => {
+                        fetchAndDisplayBoards(data.access_token);
+                    }, 500);
 
                 } else {
-                    throw new Error('Access token was not received.');
+                    throw new Error('Could not connect to Pinterest. Please try again.');
                 }
             })
             .catch(err => {
                 statusDiv.className = 'status error';
-                const errorMessage = err.message || err.error_description || 'Unknown error during token exchange.';
-                statusDiv.textContent = `❌ Error: ${errorMessage}`;
-                addDebug(`❌ Token exchange failed: ${errorMessage}`);
-                console.error('Token exchange error:', err);
+                const errorMessage = err.error_description || err.message || 'Connection failed. Please try again.';
+                statusDiv.textContent = `❌ ${errorMessage}`;
             });
         }
 
-        // 5. Функция для получения и отображения досок (ЧЕРЕЗ ПРОКСИ!)
+        // Получение и отображение досок
         function fetchAndDisplayBoards(accessToken) {
-            boardsContainer.innerHTML = '<h3>Loading your boards...</h3>';
-            
-            const proxyEndpoint = `${PROXY_URL}?endpoint=boards`;
-            addDebug(`🔄 Calling PROXY: ${proxyEndpoint}`);
+            boardsContainer.innerHTML = '<h3>📌 Loading your Pinterest boards...</h3>';
 
-            // ✅ Теперь запрос идет через ваш бэкенд, а не напрямую к Pinterest
-            fetch(proxyEndpoint, {
+            fetch(`${PROXY_URL}?endpoint=boards`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${accessToken}`
                 }
             })
             .then(response => {
-                addDebug(`📥 Boards response status: ${response.status}`);
                 if (!response.ok) {
                     return response.json().then(err => Promise.reject(err));
                 }
                 return response.json();
             })
             .then(data => {
-                addDebug(`✅ Boards data received: ${data.items ? data.items.length : 0} boards`);
-                console.log('Boards data:', data);
-                
                 if (data.items) {
-                    let boardsHtml = '<h3>📌 Your Pinterest Boards:</h3><ul id="boards-list">';
+                    statusDiv.style.display = 'none'; // Скрываем статус после успеха
+                    
+                    let boardsHtml = '<h3>📌 Your Pinterest Boards</h3><ul id="boards-list">';
+                    
                     if (data.items.length > 0) {
                         data.items.forEach(board => {
-                            boardsHtml += `<li><strong>${board.name}</strong><br><small>${board.description || 'No description'}</small></li>`;
+                            boardsHtml += `
+                                <li onclick="selectBoard('${board.id}', '${board.name}')">
+                                    <div class="board-name">${board.name}</div>
+                                    ${board.description ? `<div class="board-desc">${board.description}</div>` : ''}
+                                    <div class="board-stats">
+                                        ${board.pin_count || 0} pins • ${board.follower_count || 0} followers
+                                    </div>
+                                </li>
+                            `;
                         });
                     } else {
-                        boardsHtml += '<li>You have no boards yet.</li>';
+                        boardsHtml += '<li>You don\'t have any boards yet. Create one on Pinterest!</li>';
                     }
+                    
                     boardsHtml += '</ul>';
                     boardsContainer.innerHTML = boardsHtml;
-                    addDebug(`✅ Boards displayed successfully`);
                 } else {
-                    throw new Error(data.message || 'Could not parse boards data.');
+                    throw new Error('Could not load boards data.');
                 }
             })
             .catch(err => {
-                console.error('Boards fetch error:', err);
-                const errorMsg = err.message || JSON.stringify(err) || 'Unknown error';
-                boardsContainer.innerHTML = `<p class="error">Failed to load boards: ${errorMsg}</p>`;
-                addDebug(`❌ Boards fetch failed: ${errorMsg}`);
+                boardsContainer.innerHTML = `
+                    <div class="status error">
+                        Failed to load boards. Please refresh the page and try again.
+                    </div>
+                `;
             });
+        }
+
+        // Функция выбора доски (для будущего функционала)
+        function selectBoard(boardId, boardName) {
+            console.log(`Selected board: ${boardName} (${boardId})`);
+            // Здесь можно добавить переход к просмотру пинов доски
+            alert(`You selected: ${boardName}\n\nNext step: View pins from this board!`);
         }
     </script>
 </body>
