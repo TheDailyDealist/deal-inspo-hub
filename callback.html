@@ -6,72 +6,138 @@
     <title>Connecting to Pinterest...</title>
     <style>
         body { 
-            font-family: Arial; 
+            font-family: Arial, sans-serif; 
             max-width: 600px; 
             margin: 50px auto; 
             text-align: center; 
             padding: 20px;
+            color: #333;
         }
-        .loading { color: #666; margin: 20px 0; }
-        .error { color: #e60023; margin: 20px 0; }
-        .success { color: #28a745; margin: 20px 0; }
-        pre { 
-            background: #f5f5f5; 
-            padding: 15px; 
-            border-radius: 5px; 
+        .status {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        .loading { background-color: #eef; color: #3498db; border: 1px solid #3498db; }
+        .error { background-color: #fee; color: #e60023; border: 1px solid #e60023; }
+        .success { background-color: #efe; color: #28a745; border: 1px solid #28a745; }
+        #boards-container {
+            margin-top: 20px;
             text-align: left;
-            overflow-x: auto;
+        }
+        #boards-container h3 {
+            text-align: center;
+        }
+        #boards-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        #boards-list li {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 8px;
+            border-left: 5px solid #bd081c;
         }
     </style>
 </head>
 <body>
     <h1>🔗 Connecting to Pinterest</h1>
     <div id="status" class="loading">Processing authorization...</div>
-    <div id="result"></div>
-    <div id="next-steps"></div>
+    <div id="boards-container"></div>
 
     <script>
-        // Получаем параметры из URL
+        const statusDiv = document.getElementById('status');
+        const boardsContainer = document.getElementById('boards-container');
+
+        // !!! ВАЖНО: ЗАМЕНИТЕ ЭТУ ССЫЛКУ НА ВАШУ !!!
+        const BACKEND_URL = 'https://exploreandbook-legal.netlify.app/.netlify/functions/pinterest-token';
+        
+        // 1. Получаем параметры из URL
         const urlParams = new URLSearchParams(window.location.search);
         const code = urlParams.get('code');
-        const state = urlParams.get('state');
         const error = urlParams.get('error');
 
-        const statusDiv = document.getElementById('status');
-        const resultDiv = document.getElementById('result');
-        const nextStepsDiv = document.getElementById('next-steps');
-
+        // 2. Проверяем, есть ли ошибка или код авторизации
         if (error) {
-            statusDiv.className = 'error';
-            statusDiv.textContent = '❌ Authorization failed';
-            resultDiv.innerHTML = `<p>Error: ${error}</p>`;
+            statusDiv.className = 'status error';
+            statusDiv.textContent = `❌ Authorization failed: ${error}`;
         } else if (code) {
-            statusDiv.className = 'success';
-            statusDiv.textContent = '✅ Authorization successful!';
+            statusDiv.className = 'status loading';
+            statusDiv.textContent = '✅ Code received. Exchanging for access token...';
             
-            resultDiv.innerHTML = `
-                <p>Authorization code received:</p>
-                <pre>${code}</pre>
-                <p><strong>State:</strong> ${state}</p>
-            `;
-
-            nextStepsDiv.innerHTML = `
-                <h3>Next Steps:</h3>
-                <p>Now you need to exchange this code for an access token.</p>
-                <p>Use this code in your backend to make a POST request to:</p>
-                <pre>https://api.pinterest.com/v5/oauth/token</pre>
-                <p><small>Note: The code expires in 10 minutes</small></p>
-                <p><a href="index.html">← Back to home</a></p>
-            `;
-
-            // Сохраняем код в localStorage для дальнейшего использования
-            localStorage.setItem('pinterest_auth_code', code);
-            localStorage.setItem('pinterest_auth_state', state);
+            // 3. Отправляем код на наш безопасный бэкенд
+            exchangeCodeForToken(code);
         } else {
-            statusDiv.className = 'error';
-            statusDiv.textContent = '❌ No authorization code received';
-            resultDiv.innerHTML = '<p>Something went wrong. Please try again.</p>';
-            nextStepsDiv.innerHTML = '<p><a href="index.html">← Back to home</a></p>';
+            statusDiv.className = 'status error';
+            statusDiv.textContent = '❌ No authorization code found.';
+        }
+
+        // Функция для обмена кода на токен
+        function exchangeCodeForToken(authCode) {
+            fetch(BACKEND_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code: authCode })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    // Если сервер вернул ошибку, пытаемся прочитать ее
+                    return response.json().then(err => Promise.reject(err));
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.access_token) {
+                    statusDiv.className = 'status success';
+                    statusDiv.textContent = '🎉 Successfully connected! Fetching your boards...';
+                    
+                    // 4. Сохраняем токен и запрашиваем доски
+                    localStorage.setItem('pinterest_access_token', data.access_token);
+                    fetchAndDisplayBoards(data.access_token);
+
+                } else {
+                    // Если в ответе нет токена
+                    throw new Error('Access token was not received.');
+                }
+            })
+            .catch(err => {
+                statusDiv.className = 'status error';
+                const errorMessage = err.message || err.error_description || 'Unknown error during token exchange.';
+                statusDiv.textContent = `❌ Error: ${errorMessage}`;
+            });
+        }
+
+        // 5. Функция для получения и отображения досок
+        function fetchAndDisplayBoards(accessToken) {
+            boardsContainer.innerHTML = '<h3>Loading your boards...</h3>';
+
+            fetch('https://api.pinterest.com/v5/boards', {
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.items) {
+                    let boardsHtml = '<h3>Your Pinterest Boards:</h3><ul id="boards-list">';
+                    if (data.items.length > 0) {
+                        data.items.forEach(board => {
+                            boardsHtml += `<li>${board.name}</li>`;
+                        });
+                    } else {
+                        boardsHtml += '<li>You have no boards yet.</li>';
+                    }
+                    boardsHtml += '</ul>';
+                    boardsContainer.innerHTML = boardsHtml;
+                } else {
+                    throw new Error (data.message || 'Could not parse boards data.');
+                }
+            })
+            .catch(err => {
+                boardsContainer.innerHTML = `<p class="error">Failed to load boards: ${err.message}</p>`;
+            });
         }
     </script>
 </body>
