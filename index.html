@@ -22,7 +22,14 @@
             border-radius: 20px;
             padding: 50px 40px;
             max-width: 900px;
+            width: 100%;
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         
         .badge {
@@ -34,6 +41,7 @@
             font-size: 13px;
             font-weight: bold;
             margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(255, 152, 0, 0.3);
         }
         
         h1 {
@@ -41,6 +49,7 @@
             text-align: center;
             font-size: 42px;
             margin-bottom: 10px;
+            font-weight: 700;
         }
         
         .subtitle {
@@ -48,6 +57,7 @@
             color: #666;
             font-size: 18px;
             margin-bottom: 40px;
+            line-height: 1.5;
         }
         
         .features {
@@ -59,20 +69,29 @@
         
         .feature {
             background: #f8f9fa;
-            padding: 20px;
+            padding: 25px 20px;
             border-radius: 12px;
             border-left: 4px solid #e60023;
+            transition: all 0.3s;
+        }
+
+        .feature:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            background: #fff;
         }
         
         .feature-icon {
-            font-size: 32px;
-            margin-bottom: 10px;
+            font-size: 36px;
+            margin-bottom: 12px;
+            display: block;
         }
         
         .feature h3 {
             color: #e60023;
-            font-size: 16px;
+            font-size: 17px;
             margin-bottom: 10px;
+            font-weight: 600;
         }
         
         .feature ul {
@@ -80,7 +99,36 @@
             padding-left: 20px;
             color: #666;
             font-size: 14px;
+            line-height: 1.8;
+        }
+
+        .feature li {
+            margin: 4px 0;
+        }
+        
+        .value-prop {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 25px;
+            border-radius: 12px;
+            margin: 30px 0;
+            text-align: center;
+            border: 2px solid #e0e6ed;
+        }
+
+        .value-prop h2 {
+            color: #333;
+            font-size: 22px;
+            margin-bottom: 15px;
+        }
+
+        .value-prop p {
+            color: #555;
+            font-size: 16px;
             line-height: 1.6;
+        }
+
+        .value-prop strong {
+            color: #e60023;
         }
         
         .connect-btn { 
@@ -119,6 +167,7 @@
             margin: 0 0 12px 0;
             color: #1976D2;
             font-size: 16px;
+            font-weight: 600;
         }
         
         .scopes ul {
@@ -126,7 +175,25 @@
             padding-left: 20px;
             font-size: 14px;
             color: #555;
-            line-height: 1.8;
+            line-height: 2;
+        }
+
+        .scopes li {
+            margin: 5px 0;
+        }
+
+        .scopes strong {
+            color: #1565C0;
+        }
+
+        .info-note {
+            background: #fff9e6;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin-top: 15px;
+            border-radius: 4px;
+            font-size: 13px;
+            color: #856404;
         }
         
         .footer {
@@ -141,93 +208,138 @@
         .footer a {
             color: #e60023;
             text-decoration: none;
+            margin: 0 8px;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 30px 20px;
+            }
+
+            h1 {
+                font-size: 32px;
+            }
+
+            .subtitle {
+                font-size: 16px;
+            }
+
+            .features {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div style="text-align: center;">
-            <span class="badge">🧪 SANDBOX DEMO</span>
+            <span class="badge">🧪 SANDBOX DEMO VERSION</span>
         </div>
         
         <h1>🎯 Deal Inspiration Hub</h1>
-        <p class="subtitle">Smart Pinterest Deal Curator with AI-Powered Product Parsing</p>
+        <p class="subtitle">
+            Smart Pinterest Deal Curator with AI-Powered Product Parsing<br>
+            <small style="color: #999;">Save time creating Pinterest pins from product URLs</small>
+        </p>
+        
+        <div class="value-prop">
+            <h2>💡 Why Use This Tool?</h2>
+            <p>
+                Unlike manual pinning, our app <strong>saves 5-10 minutes per pin</strong> by automatically 
+                extracting product details, generating Pinterest-optimized descriptions with emojis and hashtags, 
+                and formatting content for maximum engagement — while keeping <strong>full user control</strong> 
+                for authentic, personal curation.
+            </p>
+        </div>
         
         <div class="features">
             <div class="feature">
-                <div class="feature-icon">🤖</div>
+                <span class="feature-icon">🤖</span>
                 <h3>Auto Parsing</h3>
                 <ul>
-                    <li>Paste product URL</li>
-                    <li>Auto-extract details</li>
+                    <li>Paste any product URL</li>
+                    <li>Auto-extract title & price</li>
                     <li>Amazon, eBay, AliExpress</li>
                     <li>Discount detection</li>
                 </ul>
             </div>
             
             <div class="feature">
-                <div class="feature-icon">🎨</div>
-                <h3>Image Optimization</h3>
-                <ul>
-                    <li>Pinterest 2:3 ratio</li>
-                    <li>Discount badges</li>
-                    <li>Watermarks</li>
-                    <li>Auto compression</li>
-                </ul>
-            </div>
-            
-            <div class="feature">
-                <div class="feature-icon">✍️</div>
+                <span class="feature-icon">✍️</span>
                 <h3>Smart Content</h3>
                 <ul>
-                    <li>SEO optimization</li>
-                    <li>Emoji descriptions</li>
-                    <li>Auto hashtags</li>
+                    <li>Pinterest SEO optimization</li>
+                    <li>Auto emoji descriptions</li>
+                    <li>Relevant hashtags</li>
                     <li>Fully editable</li>
                 </ul>
             </div>
             
             <div class="feature">
-                <div class="feature-icon">📌</div>
+                <span class="feature-icon">📌</span>
                 <h3>Board Manager</h3>
                 <ul>
-                    <li>Create boards</li>
-                    <li>Smart suggestions</li>
-                    <li>Category organize</li>
-                    <li>Quick switching</li>
+                    <li>Create boards via API</li>
+                    <li>Quick board selection</li>
+                    <li>Category organization</li>
+                    <li>Sandbox testing</li>
+                </ul>
+            </div>
+            
+            <div class="feature">
+                <span class="feature-icon">🎨</span>
+                <h3>User Control</h3>
+                <ul>
+                    <li>Review before posting</li>
+                    <li>Edit all content</li>
+                    <li>No bulk automation</li>
+                    <li>Manual confirmation</li>
                 </ul>
             </div>
         </div>
         
         <div class="scopes">
-            <h4>🔐 Required Permissions:</h4>
+            <h4>🔐 Required Pinterest Permissions:</h4>
             <ul>
-                <li><strong>boards:read</strong> - View your boards</li>
-                <li><strong>boards:write</strong> - Create boards</li>
-                <li><strong>pins:read</strong> - View pins</li>
-                <li><strong>pins:write</strong> - Create pins</li>
+                <li><strong>boards:read</strong> - View your Pinterest boards</li>
+                <li><strong>boards:write</strong> - Create and organize boards</li>
+                <li><strong>pins:read</strong> - View your existing pins</li>
+                <li><strong>pins:write</strong> - Create new optimized pins</li>
             </ul>
+            <div class="info-note">
+                ℹ️ <strong>Privacy:</strong> All processing happens in real-time. We never store your Pinterest credentials 
+                or personal data. Tokens are kept only in your browser's local storage.
+            </div>
         </div>
         
-        <a href="https://www.pinterest.com/oauth/?client_id=1534568&redirect_uri=https://thedailydealist.github.io/deal-inspo-hub/callback&response_type=code&scope=boards:read,boards:write,pins:read,pins:write&state=deal-inspo-hub" class="connect-btn">
-            🚀 Connect & Start Curating
+        <a href="https://www.pinterest.com/oauth/?client_id=1534568&redirect_uri=https://thedailydealist.github.io/deal-inspo-hub/callback&response_type=code&scope=boards:read,boards:write,pins:read,pins:write&state=deal-inspo-hub" 
+           class="connect-btn">
+            🚀 Connect to Pinterest & Start Curating
         </a>
         
         <div class="footer">
             <p>
-                <a href="privacy.html">Privacy Policy</a> · 
+                <a href="privacy.html">Privacy Policy</a>
+                <span style="color: #ddd;">|</span>
                 <a href="terms.html">Terms of Service</a>
             </p>
-            <p style="margin-top: 10px; font-size: 12px;">
-                Made with ❤️ for deal hunters
+            <p style="margin-top: 10px; font-size: 12px; color: #999;">
+                Made with ❤️ for deal hunters and Pinterest enthusiasts
             </p>
         </div>
     </div>
 
     <script>
-        // Clear old tokens
+        // Clear old tokens to ensure fresh authentication with all required scopes
         localStorage.removeItem('pinterest_access_token');
         sessionStorage.removeItem('sandbox_boards');
+        
+        console.log('🎯 Deal Inspiration Hub initialized');
+        console.log('📋 Scopes: boards:read, boards:write, pins:read, pins:write');
     </script>
 </body>
 </html>
