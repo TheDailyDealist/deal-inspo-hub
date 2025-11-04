@@ -4,31 +4,68 @@
     <meta charset="UTF-8">
     <title>Deal Inspiration Hub</title>
     <style>
-        body { font-family: Arial; max-width: 600px; margin: 50px auto; text-align: center; }
+        body { 
+            font-family: Arial, sans-serif; 
+            max-width: 600px; 
+            margin: 50px auto; 
+            text-align: center;
+            padding: 20px;
+        }
+        h1 {
+            color: #e60023;
+        }
         .connect-btn { 
             display: inline-block; 
-            padding: 12px 24px; 
+            padding: 15px 30px; 
             background: #e60023; 
             color: white; 
             text-decoration: none; 
             border-radius: 25px; 
-            font-weight: bold; 
+            font-weight: bold;
+            font-size: 16px;
+            margin: 20px 0;
+            transition: background 0.3s;
         }
-        .connect-btn:hover { background: #bd0018; }
+        .connect-btn:hover { 
+            background: #bd0018; 
+        }
+        .info {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .badge {
+            display: inline-block;
+            background: #ffc107;
+            color: #333;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
+    <div class="badge">🧪 SANDBOX MODE</div>
     <h1>🎉 Deal Inspiration Hub</h1>
-    <p>Connect to view your Pinterest boards and pins</p>
+    <p>Connect to view your Pinterest boards and create pins</p>
     
-    <a href="https://www.pinterest.com/oauth/?client_id=1534568&redirect_uri=https://thedailydealist.github.io/deal-inspo-hub/callback&response_type=code&scope=boards:read,pins:read&state=deal-inspo-hub" class="connect-btn">
+    <div class="info">
+        <strong>⚠️ Sandbox Mode Active</strong><br>
+        <small>Using Pinterest API Sandbox for testing</small>
+    </div>
+    
+    <a href="https://www.pinterest.com/oauth/?client_id=1534568&redirect_uri=https://thedailydealist.github.io/deal-inspo-hub/callback&response_type=code&scope=boards:read,pins:read,pins:write&state=deal-inspo-hub" class="connect-btn">
         Connect to Pinterest
     </a>
     
-    <p><small>After connecting → View your boards and pins</small></p>
-    <p>
+    <p><small>After connecting → View your boards and create pins</small></p>
+    
+    <div style="margin-top: 30px; font-size: 14px;">
         <a href="https://thedailydealist.github.io/deal-inspo-hub/privacy.html">Privacy Policy</a> | 
         <a href="https://thedailydealist.github.io/deal-inspo-hub/terms.html">Terms of Service</a>
-    </p>
+    </div>
 </body>
 </html>
