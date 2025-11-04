@@ -3,34 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Deal Inspiration Hub - Pinterest Connected</title>
+    <title>Deal Curator - Dashboard</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { 
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
-            max-width: 800px; 
-            margin: 0 auto; 
-            padding: 20px;
             background: #f7f7f7;
             color: #333;
         }
-        h1 { 
-            text-align: center; 
-            color: #e60023; 
-            margin-bottom: 10px;
-            font-size: 28px;
-        }
-        .badge {
-            display: block;
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
             text-align: center;
-            background: #ffc107;
-            color: #333;
-            padding: 8px;
-            border-radius: 5px;
-            font-size: 14px;
-            font-weight: bold;
-            margin-bottom: 15px;
         }
+        
+        .badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        h1 { font-size: 28px; margin-bottom: 5px; }
+        
         .status {
             padding: 15px;
             border-radius: 8px;
@@ -38,10 +43,10 @@
             font-weight: 500;
             text-align: center;
         }
-        .loading { background-color: #eef; color: #3498db; border: 1px solid #3498db; }
-        .error { background-color: #fee; color: #e60023; border: 1px solid #e60023; }
-        .success { background-color: #efe; color: #28a745; border: 1px solid #28a745; }
-        .warning { background-color: #fff3cd; color: #856404; border: 1px solid #ffc107; }
+        .loading { background: #eef; color: #3498db; border: 1px solid #3498db; }
+        .error { background: #fee; color: #e60023; border: 1px solid #e60023; }
+        .success { background: #efe; color: #28a745; border: 1px solid #28a745; }
+        .warning { background: #fff3cd; color: #856404; border: 1px solid #ffc107; }
         
         .section {
             background: white;
@@ -54,52 +59,41 @@
         .section h3 {
             color: #e60023;
             margin-bottom: 15px;
-            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
         
         #boards-list {
-            list-style-type: none;
+            list-style: none;
             padding: 0;
-            margin: 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
         }
         
         #boards-list li {
             background: #f9f9f9;
-            padding: 12px 15px;
+            padding: 15px;
             border-radius: 8px;
-            margin-bottom: 10px;
             border-left: 4px solid #e60023;
             cursor: pointer;
             transition: all 0.2s;
         }
         
         #boards-list li:hover {
-            background: #ececec;
-            transform: translateX(5px);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        #boards-list li.new-board {
+            border-left-color: #4CAF50;
+            background: #f1f8f4;
         }
         
-        #boards-list li.selected {
-            background: #fff0f3;
-            border-left-width: 6px;
-        }
-        
-        .board-name {
-            font-size: 16px;
-            font-weight: 600;
-            color: #333;
-        }
-        
-        .board-desc {
-            font-size: 14px;
-            color: #666;
-            margin-top: 5px;
-        }
-        
-        .board-stats {
-            font-size: 12px;
-            color: #999;
-            margin-top: 5px;
-        }
+        .board-name { font-size: 16px; font-weight: 600; }
+        .board-desc { font-size: 14px; color: #666; margin-top: 5px; }
+        .board-stats { font-size: 12px; color: #999; margin-top: 5px; }
         
         .form-group {
             margin-bottom: 15px;
@@ -115,16 +109,22 @@
         .form-group input,
         .form-group textarea {
             width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
             font-size: 14px;
             font-family: inherit;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #e60023;
         }
         
         .form-group textarea {
             resize: vertical;
-            min-height: 80px;
+            min-height: 100px;
         }
         
         .form-group small {
@@ -133,11 +133,17 @@
             color: #999;
             font-size: 12px;
         }
+
+        .input-with-button {
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-with-button input { flex: 1; }
         
         .btn {
-            display: inline-block;
             padding: 12px 24px;
-            background: #e60023;
+            background: linear-gradient(135deg, #e60023 0%, #bd081c 100%);
             color: white;
             border: none;
             border-radius: 25px;
@@ -145,11 +151,9 @@
             font-size: 16px;
             cursor: pointer;
             transition: all 0.2s;
-            width: 100%;
         }
         
         .btn:hover:not(:disabled) {
-            background: #bd081c;
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(230, 0, 35, 0.3);
         }
@@ -159,566 +163,204 @@
             cursor: not-allowed;
         }
 
-        .btn-secondary {
-            background: #6c757d;
-            margin-top: 10px;
-        }
+        .btn-small { padding: 8px 16px; font-size: 14px; }
+        .btn-full { width: 100%; }
 
-        .btn-secondary:hover:not(:disabled) {
-            background: #5a6268;
+        .btn-secondary {
+            background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
         }
         
         .preview {
             margin-top: 15px;
-            padding: 10px;
+            padding: 15px;
             background: #f5f5f5;
-            border-radius: 6px;
-            border: 1px dashed #ddd;
+            border-radius: 8px;
+            border: 2px dashed #ddd;
         }
         
         .preview img {
             max-width: 100%;
-            height: auto;
-            border-radius: 4px;
+            max-height: 400px;
+            border-radius: 8px;
             margin-top: 10px;
         }
         
-        #create-pin-section, #create-board-section {
-            display: none;
-        }
-        
-        .hidden {
-            display: none;
-        }
+        #create-pin-section, #create-board-section { display: none; }
+        .hidden { display: none; }
 
         .debug-info {
             background: #2c3e50;
             color: #ecf0f1;
             padding: 15px;
-            border-radius: 5px;
+            border-radius: 8px;
             font-size: 11px;
-            font-family: 'Courier New', monospace;
-            margin: 10px 0;
-            max-height: 400px;
+            font-family: monospace;
+            max-height: 300px;
             overflow-y: auto;
-            white-space: pre-wrap;
-            word-break: break-all;
-        }
-        
-        .debug-info div {
-            padding: 3px 0;
-            border-bottom: 1px solid #34495e;
-        }
-        
-        .debug-info div:last-child {
-            border-bottom: none;
         }
 
         .empty-state {
             text-align: center;
-            padding: 40px 20px;
+            padding: 40px;
             color: #666;
         }
 
-        .empty-state img {
-            width: 100px;
-            opacity: 0.5;
-            margin-bottom: 20px;
+        .parse-info {
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 12px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .feature-badge {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            margin-left: 8px;
         }
     </style>
 </head>
 <body>
-    <div class="badge">🧪 SANDBOX MODE - Testing Environment</div>
-    <h1>🎉 Deal Inspiration Hub</h1>
-    <div id="status" class="status loading">Connecting to Pinterest Sandbox...</div>
-    
-    <!-- Debug Info -->
-    <div id="debug-info" class="debug-info"></div>
-    
-    <!-- Boards Section -->
-    <div id="boards-section" class="section hidden">
-        <h3>📌 Your Pinterest Boards</h3>
-        <p style="margin-bottom: 15px; color: #666;">Select a board to create a pin:</p>
-        <ul id="boards-list"></ul>
-        
-        <div id="empty-boards" class="empty-state hidden">
-            <div style="font-size: 48px; margin-bottom: 15px;">📋</div>
-            <h4>No boards found in Sandbox</h4>
-            <p style="margin: 15px 0;">Create a test board to get started!</p>
-            <button class="btn" onclick="showCreateBoard()">+ Create Test Board</button>
-        </div>
+    <div class="header">
+        <div class="badge">🧪 SANDBOX MODE</div>
+        <h1>🎯 Deal Curator Dashboard</h1>
+        <p>Smart Pinterest Deal Management</p>
     </div>
 
-    <!-- Create Board Section -->
-    <div id="create-board-section" class="section">
-        <h3>📋 Create Test Board</h3>
-        <p style="margin-bottom: 15px; color: #666;">
-            Create a board in the Pinterest Sandbox for testing
-        </p>
+    <div class="container">
+        <div id="status" class="status loading">Connecting to Pinterest...</div>
         
-        <form id="board-form">
-            <div class="form-group">
-                <label for="board-name">Board Name *</label>
-                <input type="text" id="board-name" required maxlength="100" 
-                    placeholder="e.g., My Deals Board">
-                <small>Max 100 characters</small>
-            </div>
-            
-            <div class="form-group">
-                <label for="board-description">Description</label>
-                <textarea id="board-description" maxlength="500" 
-                    placeholder="Description of this board..."></textarea>
-                <small>Max 500 characters (optional)</small>
-            </div>
-            
-            <button type="submit" class="btn" id="create-board-btn">
-                Create Board
-            </button>
-        </form>
+        <div id="debug-info" class="debug-info"></div>
         
-        <div style="margin-top: 15px; text-align: center;">
-            <a href="#" onclick="showBoards(); return false;" 
-                style="color: #666; font-size: 14px;">← Cancel</a>
+        <!-- Boards Section -->
+        <div id="boards-section" class="section hidden">
+            <h3>
+                <span>📌 Your Boards</span>
+                <button class="btn btn-small" onclick="showCreateBoard()">+ New Board</button>
+            </h3>
+            <ul id="boards-list"></ul>
+            
+            <div id="empty-boards" class="empty-state hidden">
+                <div style="font-size: 48px;">📋</div>
+                <h4>No boards found</h4>
+                <p>Create your first board!</p>
+                <button class="btn" onclick="showCreateBoard()">+ Create Board</button>
+            </div>
         </div>
-    </div>
-    
-    <!-- Create Pin Section -->
-    <div id="create-pin-section" class="section">
-        <h3>✨ Create a New Pin</h3>
-        <p style="margin-bottom: 15px; color: #666;">
-            Selected board: <strong id="selected-board-name"></strong>
-        </p>
-        
-        <form id="pin-form">
-            <div class="form-group">
-                <label for="pin-title">Pin Title *</label>
-                <input type="text" id="pin-title" required maxlength="100" 
-                    placeholder="e.g., Amazing Deal on Wireless Headphones">
-                <small>Max 100 characters</small>
-            </div>
+
+        <!-- Create Board Section -->
+        <div id="create-board-section" class="section">
+            <h3>📋 Create Board</h3>
+            <form id="board-form">
+                <div class="form-group">
+                    <label for="board-name">Board Name *</label>
+                    <input type="text" id="board-name" required maxlength="100" 
+                        placeholder="e.g., Tech Deals">
+                </div>
+                
+                <div class="form-group">
+                    <label for="board-description">Description</label>
+                    <textarea id="board-description" maxlength="500"></textarea>
+                </div>
+                
+                <button type="submit" class="btn btn-full" id="create-board-btn">
+                    Create Board
+                </button>
+            </form>
             
-            <div class="form-group">
-                <label for="pin-description">Description</label>
-                <textarea id="pin-description" maxlength="500" 
-                    placeholder="Add details about this deal..."></textarea>
-                <small>Max 500 characters (optional)</small>
+            <div style="margin-top: 15px; text-align: center;">
+                <a href="#" onclick="showBoards(); return false;" style="color: #666;">← Cancel</a>
             </div>
-            
-            <div class="form-group">
-                <label for="pin-image-url">Image URL *</label>
-                <input type="url" id="pin-image-url" required 
-                    placeholder="https://i.pinimg.com/originals/...">
-                <small>Direct link to the image (must be publicly accessible)</small>
-            </div>
-            
-            <div class="form-group">
-                <label for="pin-link">Destination Link</label>
-                <input type="url" id="pin-link" 
-                    placeholder="https://example.com/product">
-                <small>Where the pin should link to (optional)</small>
-            </div>
-            
-            <div class="preview hidden" id="image-preview">
-                <strong>Image Preview:</strong>
-                <img id="preview-img" src="" alt="Preview">
-            </div>
-            
-            <button type="submit" class="btn" id="create-pin-btn">
-                Create Pin on Pinterest Sandbox
-            </button>
-        </form>
-        
-        <div style="margin-top: 15px; text-align: center;">
-            <a href="#" onclick="showBoards(); return false;" 
-                style="color: #666; font-size: 14px;">← Back to boards</a>
         </div>
-    </div>
-
-    <script>
-        const statusDiv = document.getElementById('status');
-        const boardsSection = document.getElementById('boards-section');
-        const createBoardSection = document.getElementById('create-board-section');
-        const createPinSection = document.getElementById('create-pin-section');
-        const boardsList = document.getElementById('boards-list');
-        const emptyBoards = document.getElementById('empty-boards');
-        const pinForm = document.getElementById('pin-form');
-        const boardForm = document.getElementById('board-form');
-        const createPinBtn = document.getElementById('create-pin-btn');
-        const createBoardBtn = document.getElementById('create-board-btn');
-        const imageUrlInput = document.getElementById('pin-image-url');
-        const imagePreview = document.getElementById('image-preview');
-        const previewImg = document.getElementById('preview-img');
-        const debugInfo = document.getElementById('debug-info');
-
-        // Backend URLs
-        const TOKEN_URL = 'https://exploreandbook-legal.netlify.app/.netlify/functions/pinterest-token';
-        const PROXY_URL = 'https://exploreandbook-legal.netlify.app/.netlify/functions/pinterest-proxy';
-        const CREATE_PIN_URL = 'https://exploreandbook-legal.netlify.app/.netlify/functions/pinterest-create-pin';
-        const CREATE_BOARD_URL = 'https://exploreandbook-legal.netlify.app/.netlify/functions/pinterest-create-board';
         
-        let accessToken = null;
-        let selectedBoardId = null;
-        let selectedBoardName = null;
-        let boards = [];
-
-        // Debug logging
-        function log(message, data = null) {
-            const timestamp = new Date().toLocaleTimeString();
-            console.log(`🔍 ${timestamp}: ${message}`, data || '');
+        <!-- Create Pin Section -->
+        <div id="create-pin-section" class="section">
+            <h3>
+                <span>✨ Create Pin <span class="feature-badge">AI</span></span>
+            </h3>
+            <p style="margin-bottom: 15px; color: #666;">
+                Board: <strong id="selected-board-name"></strong>
+            </p>
             
-            let logText = `[${timestamp}] ${message}`;
-            if (data) {
-                if (typeof data === 'object') {
-                    logText += '\n' + JSON.stringify(data, null, 2);
-                } else {
-                    logText += ': ' + data;
-                }
-            }
-            
-            const logDiv = document.createElement('div');
-            logDiv.textContent = logText;
-            debugInfo.appendChild(logDiv);
-            debugInfo.scrollTop = debugInfo.scrollHeight;
-        }
-
-        log('🚀 Page loaded - SANDBOX MODE');
-        log('Checking URL parameters...');
-
-        // Image preview
-        imageUrlInput.addEventListener('input', function() {
-            const url = this.value.trim();
-            if (url && isValidUrl(url)) {
-                previewImg.src = url;
-                imagePreview.classList.remove('hidden');
-            } else {
-                imagePreview.classList.add('hidden');
-            }
-        });
-
-        function isValidUrl(string) {
-            try {
-                new URL(string);
-                return true;
-            } catch (_) {
-                return false;  
-            }
-        }
-
-        // Get URL parameters
-        const urlParams = new URLSearchParams(window.location.search);
-        const code = urlParams.get('code');
-        const error = urlParams.get('error');
-
-        log('URL params:', { code: code ? `present (${code.substring(0, 10)}...)` : 'missing', error });
-
-        if (error) {
-            statusDiv.className = 'status error';
-            statusDiv.textContent = `❌ Authorization failed: ${error}`;
-            log('❌ Authorization error:', error);
-        } else if (code) {
-            log('✅ Authorization code received');
-            exchangeCodeForToken(code);
-        } else {
-            statusDiv.className = 'status error';
-            statusDiv.textContent = '❌ No authorization code found.';
-            log('❌ No authorization code in URL');
-        }
-
-        function exchangeCodeForToken(authCode) {
-            log('📤 Calling TOKEN_URL:', TOKEN_URL);
-            
-            fetch(TOKEN_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ code: authCode })
-            })
-            .then(response => {
-                log(`📥 Token response status: ${response.status}`);
-                return response.text();
-            })
-            .then(text => {
-                log('📄 Token response (raw):', text.substring(0, 200));
-                
-                let data;
-                try {
-                    data = JSON.parse(text);
-                } catch (e) {
-                    log('❌ Failed to parse token response as JSON');
-                    throw new Error('Server returned invalid JSON: ' + text.substring(0, 100));
-                }
-                
-                if (data.access_token) {
-                    accessToken = data.access_token;
-                    localStorage.setItem('pinterest_access_token', accessToken);
-                    
-                    log('✅ Access token received:', accessToken.substring(0, 20) + '...');
-                    
-                    statusDiv.className = 'status success';
-                    statusDiv.textContent = '✅ Connected to Pinterest Sandbox! Loading boards...';
-                    
-                    setTimeout(() => {
-                        fetchBoards();
-                    }, 500);
-                } else {
-                    log('❌ No access_token in response:', data);
-                    throw new Error(data.message || 'Could not obtain access token');
-                }
-            })
-            .catch(err => {
-                statusDiv.className = 'status error';
-                const errorMessage = err.message || 'Connection failed';
-                statusDiv.textContent = `❌ ${errorMessage}`;
-                log('❌ Token exchange failed:', err);
-            });
-        }
-
-        function fetchBoards() {
-            const fetchUrl = `${PROXY_URL}?endpoint=boards`;
-            log('📤 Fetching boards from:', fetchUrl);
-            log('🔑 Using token:', accessToken ? accessToken.substring(0, 20) + '...' : 'MISSING');
-
-            fetch(fetchUrl, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${accessToken}`
-                }
-            })
-            .then(response => {
-                log(`📥 Boards response status: ${response.status}`);
-                return response.text();
-            })
-            .then(text => {
-                log('📄 Boards response (raw):', text.substring(0, 500));
-                
-                let data;
-                try {
-                    data = JSON.parse(text);
-                } catch (e) {
-                    log('❌ Failed to parse boards response as JSON');
-                    throw new Error('Server returned invalid response: ' + text.substring(0, 100));
-                }
-                
-                log('✅ Boards data parsed:', data);
-                
-                if (data.items && data.items.length > 0) {
-                    boards = data.items;
-                    log(`✅ Found ${boards.length} boards`);
-                    displayBoards();
-                    statusDiv.style.display = 'none';
-                    boardsSection.classList.remove('hidden');
-                    emptyBoards.classList.add('hidden');
-                } else {
-                    log('⚠️ No boards found - showing create board option');
-                    statusDiv.className = 'status warning';
-                    statusDiv.textContent = '⚠️ No boards found in Sandbox. Create a test board to continue.';
-                    setTimeout(() => {
-                        statusDiv.style.display = 'none';
-                        boardsSection.classList.remove('hidden');
-                        emptyBoards.classList.remove('hidden');
-                    }, 2000);
-                }
-            })
-            .catch(err => {
-                statusDiv.className = 'status error';
-                const errorMsg = err.message || 'Failed to load boards';
-                statusDiv.textContent = '❌ ' + errorMsg;
-                log('❌ Failed to fetch boards:', err);
-            });
-        }
-
-        function displayBoards() {
-            boardsList.innerHTML = '';
-            boards.forEach(board => {
-                const li = document.createElement('li');
-                li.innerHTML = `
-                    <div class="board-name">${board.name}</div>
-                    ${board.description ? `<div class="board-desc">${board.description}</div>` : ''}
-                    <div class="board-stats">
-                        ${board.pin_count || 0} pins • ${board.follower_count || 0} followers
+            <form id="pin-form">
+                <div class="form-group">
+                    <label for="product-url">🔗 Product URL</label>
+                    <div class="input-with-button">
+                        <input type="url" id="product-url" 
+                            placeholder="https://www.amazon.com/...">
+                        <button type="button" class="btn btn-secondary" id="parse-btn">
+                            🤖 Parse
+                        </button>
                     </div>
-                `;
-                li.onclick = () => selectBoard(board.id, board.name);
-                boardsList.appendChild(li);
-            });
-            log('✅ Boards displayed in UI');
-        }
+                    <small>Paste URL and click Parse to auto-fill</small>
+                </div>
 
-        function selectBoard(boardId, boardName) {
-            selectedBoardId = boardId;
-            selectedBoardName = boardName;
-            document.getElementById('selected-board-name').textContent = boardName;
+                <div id="parse-result" class="parse-info hidden">
+                    <strong>✅ Parsed!</strong>
+                    <div id="parse-details"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="pin-title">Title *</label>
+                    <input type="text" id="pin-title" required maxlength="100">
+                </div>
+                
+                <div class="form-group">
+                    <label for="pin-description">Description</label>
+                    <textarea id="pin-description" maxlength="500"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="pin-image-url">Image URL *</label>
+                    <input type="url" id="pin-image-url" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="pin-link">Link</label>
+                    <input type="url" id="pin-link">
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="optimize-image" checked>
+                        Add discount badge (if detected)
+                    </label>
+                </div>
+                
+                <div class="preview hidden" id="image-preview">
+                    <strong>Preview:</strong>
+                    <img id="preview-img" src="" alt="Preview">
+                </div>
+                
+                <button type="submit" class="btn btn-full" id="create-pin-btn">
+                    🚀 Create Pin
+                </button>
+            </form>
             
-            boardsSection.classList.add('hidden');
-            createPinSection.style.display = 'block';
-            log(`✅ Board selected: ${boardName} (ID: ${boardId})`);
-        }
+            <div style="margin-top: 15px; text-align: center;">
+                <a href="#" onclick="showBoards(); return false;" style="color: #666;">← Back</a>
+            </div>
+        </div>
+    </div>
 
-        function showBoards() {
-            createPinSection.style.display = 'none';
-            createBoardSection.style.display = 'none';
-            boardsSection.classList.remove('hidden');
-            pinForm.reset();
-            boardForm.reset();
-            imagePreview.classList.add('hidden');
-            log('← Returned to boards list');
-        }
-
-        function showCreateBoard() {
-            boardsSection.classList.add('hidden');
-            createBoardSection.style.display = 'block';
-            log('→ Opening create board form');
-        }
-
-        // Create Board Handler
-        boardForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const name = document.getElementById('board-name').value.trim();
-            const description = document.getElementById('board-description').value.trim();
-
-            if (!name) {
-                alert('Please enter board name');
-                return;
-            }
-
-            log('📤 Creating board...', { name, description });
-
-            createBoardBtn.disabled = true;
-            createBoardBtn.textContent = 'Creating Board...';
-
-            const boardData = {
-                name: name
-            };
-
-            if (description) boardData.description = description;
-
-            fetch(CREATE_BOARD_URL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${accessToken}`
-                },
-                body: JSON.stringify(boardData)
-            })
-            .then(response => {
-                log(`📥 Create board response status: ${response.status}`);
-                return response.text();
-            })
-            .then(text => {
-                log('📄 Create board response (raw):', text);
-                
-                let data;
-                try {
-                    data = JSON.parse(text);
-                } catch (e) {
-                    log('❌ Failed to parse create board response as JSON');
-                    throw new Error('Server returned invalid response: ' + text.substring(0, 100));
-                }
-                
-                log('✅ Board response parsed:', data);
-                
-                if (data.id) {
-                    log('✅ Board created successfully! ID:', data.id);
-                    alert(`✅ Board created successfully!\n\nBoard: ${data.name}\nID: ${data.id}`);
-                    boardForm.reset();
-                    
-                    // Refresh boards list
-                    fetchBoards();
-                    showBoards();
-                } else if (data.message) {
-                    throw new Error(data.message);
-                } else {
-                    throw new Error('Board creation returned unexpected response');
-                }
-            })
-            .catch(err => {
-                const errorMsg = err.message || 'Unknown error';
-                alert('❌ Failed to create board: ' + errorMsg);
-                log('❌ Board creation failed:', err);
-            })
-            .finally(() => {
-                createBoardBtn.disabled = false;
-                createBoardBtn.textContent = 'Create Board';
-            });
-        });
-
-        // Create Pin Handler
-        pinForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const title = document.getElementById('pin-title').value.trim();
-            const description = document.getElementById('pin-description').value.trim();
-            const imageUrl = document.getElementById('pin-image-url').value.trim();
-            const link = document.getElementById('pin-link').value.trim();
-
-            if (!title || !imageUrl) {
-                alert('Please fill in title and image URL');
-                log('⚠️ Validation failed: missing title or image URL');
-                return;
-            }
-
-            log('📤 Creating pin...', { title, imageUrl, boardId: selectedBoardId });
-
-            createPinBtn.disabled = true;
-            createPinBtn.textContent = 'Creating Pin...';
-
-            const pinData = {
-                board_id: selectedBoardId,
-                title: title,
-                media_source: imageUrl
-            };
-
-            if (description) pinData.description = description;
-            if (link) pinData.link = link;
-
-            log('📤 Pin data:', pinData);
-
-            fetch(CREATE_PIN_URL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${accessToken}`
-                },
-                body: JSON.stringify(pinData)
-            })
-            .then(response => {
-                log(`📥 Create pin response status: ${response.status}`);
-                return response.text();
-            })
-            .then(text => {
-                log('📄 Create pin response (raw):', text.substring(0, 500));
-                
-                let data;
-                try {
-                    data = JSON.parse(text);
-                } catch (e) {
-                    log('❌ Failed to parse create pin response as JSON');
-                    throw new Error('Server returned invalid response: ' + text.substring(0, 100));
-                }
-                
-                log('✅ Pin response parsed:', data);
-                
-                if (data.id) {
-                    log('✅ Pin created successfully! ID:', data.id);
-                    alert(`✅ Pin created successfully in Sandbox!\n\nPin ID: ${data.id}\n\n⚠️ Note: This is a sandbox pin and won't appear on real Pinterest.`);
-                    pinForm.reset();
-                    imagePreview.classList.add('hidden');
-                } else if (data.message) {
-                    throw new Error(data.message);
-                } else {
-                    throw new Error('Pin creation returned unexpected response');
-                }
-            })
-            .catch(err => {
-                const errorMsg = err.message || 'Unknown error';
-                alert('❌ Failed to create pin: ' + errorMsg);
-                log('❌ Pin creation failed:', err);
-            })
-            .finally(() => {
-                createPinBtn.disabled = false;
-                createPinBtn.textContent = 'Create Pin on Pinterest Sandbox';
-            });
-        });
-    </script>
+    <!-- Подключаем JS файл -->
+    <script src="js/main.js"></script>
 </body>
 </html>
