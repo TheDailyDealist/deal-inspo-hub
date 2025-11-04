@@ -169,11 +169,24 @@
         .hidden {
             display: none;
         }
+
+        .debug-info {
+            background: #f0f0f0;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            font-family: monospace;
+            margin: 10px 0;
+            color: #666;
+        }
     </style>
 </head>
 <body>
     <h1>🎉 Deal Inspiration Hub</h1>
     <div id="status" class="status loading">Connecting to your Pinterest account...</div>
+    
+    <!-- Debug Info -->
+    <div id="debug-info" class="debug-info hidden"></div>
     
     <!-- Boards Section -->
     <div id="boards-section" class="section hidden">
@@ -244,6 +257,7 @@
         const imageUrlInput = document.getElementById('pin-image-url');
         const imagePreview = document.getElementById('image-preview');
         const previewImg = document.getElementById('preview-img');
+        const debugInfo = document.getElementById('debug-info');
 
         // Backend URLs
         const TOKEN_URL = 'https://exploreandbook-legal.netlify.app/.netlify/functions/pinterest-token';
@@ -254,6 +268,15 @@
         let selectedBoardId = null;
         let selectedBoardName = null;
         let boards = [];
+
+        // Debug logging
+        function log(message, data = null) {
+            console.log(`🔍 ${message}`, data || '');
+            debugInfo.classList.remove('hidden');
+            debugInfo.innerHTML += `<div>${new Date().toLocaleTimeString()}: ${message}</div>`;
+        }
+
+        log('Page loaded, checking URL parameters...');
 
         // Image preview
         imageUrlInput.addEventListener('input', function() {
@@ -280,35 +303,50 @@
         const code = urlParams.get('code');
         const error = urlParams.get('error');
 
+        log('URL params:', { code: code ? 'present' : 'missing', error });
+
         if (error) {
             statusDiv.className = 'status error';
             statusDiv.textContent = `❌ Authorization failed: ${error}`;
+            log('Authorization error:', error);
         } else if (code) {
+            log('Authorization code received, exchanging for token...');
             exchangeCodeForToken(code);
         } else {
             statusDiv.className = 'status error';
             statusDiv.textContent = '❌ No authorization code found.';
+            log('No authorization code in URL');
         }
 
         function exchangeCodeForToken(authCode) {
+            log('Calling TOKEN_URL:', TOKEN_URL);
+            
             fetch(TOKEN_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ code: authCode })
             })
             .then(response => {
+                log('Token response status:', response.status);
                 if (!response.ok) {
-                    return response.json().then(err => Promise.reject(err));
+                    return response.json().then(err => {
+                        log('Token error:', err);
+                        return Promise.reject(err);
+                    });
                 }
                 return response.json();
             })
             .then(data => {
+                log('Token received:', data.access_token ? 'YES' : 'NO');
+                
                 if (data.access_token) {
                     accessToken = data.access_token;
                     localStorage.setItem('pinterest_access_token', accessToken);
                     
                     statusDiv.className = 'status success';
                     statusDiv.textContent = '✅ Connected successfully! Loading your boards...';
+                    
+                    log('Token saved, fetching boards...');
                     
                     setTimeout(() => {
                         fetchBoards();
@@ -321,27 +359,45 @@
                 statusDiv.className = 'status error';
                 const errorMessage = err.error_description || err.message || 'Connection failed.';
                 statusDiv.textContent = `❌ ${errorMessage}`;
+                log('Token exchange failed:', errorMessage);
             });
         }
 
         function fetchBoards() {
-            fetch(`${PROXY_URL}?endpoint=boards`, {
+            const fetchUrl = `${PROXY_URL}?endpoint=boards`;
+            log('Fetching boards from:', fetchUrl);
+            log('Using token:', accessToken ? accessToken.substring(0, 20) + '...' : 'MISSING');
+
+            fetch(fetchUrl, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${accessToken}`
                 }
             })
             .then(response => {
+                log('Boards response status:', response.status);
+                
                 if (!response.ok) {
-                    return response.json().then(err => Promise.reject(err));
+                    return response.text().then(text => {
+                        log('Boards error response:', text);
+                        try {
+                            return Promise.reject(JSON.parse(text));
+                        } catch {
+                            return Promise.reject({ message: text });
+                        }
+                    });
                 }
                 return response.json();
             })
             .then(data => {
+                log('Boards data received:', data);
+                
                 if (data.items && data.items.length > 0) {
                     boards = data.items;
+                    log(`Found ${boards.length} boards`);
                     displayBoards();
                     statusDiv.style.display = 'none';
+                    debugInfo.classList.add('hidden'); // Hide debug after success
                     boardsSection.classList.remove('hidden');
                 } else {
                     throw new Error('No boards found. Create a board on Pinterest first.');
@@ -349,7 +405,9 @@
             })
             .catch(err => {
                 statusDiv.className = 'status error';
-                statusDiv.textContent = '❌ Failed to load boards. Please try again.';
+                const errorMsg = err.message || JSON.stringify(err);
+                statusDiv.textContent = '❌ Failed to load boards: ' + errorMsg;
+                log('Failed to fetch boards:', err);
             });
         }
 
@@ -376,6 +434,7 @@
             
             boardsSection.classList.add('hidden');
             createPinSection.style.display = 'block';
+            log('Board selected:', boardName);
         }
 
         function showBoards() {
@@ -398,6 +457,8 @@
                 return;
             }
 
+            log('Creating pin...', { title, imageUrl, boardId: selectedBoardId });
+
             createBtn.disabled = true;
             createBtn.textContent = 'Creating Pin...';
 
@@ -419,12 +480,19 @@
                 body: JSON.stringify(pinData)
             })
             .then(response => {
+                log('Create pin response status:', response.status);
+                
                 if (!response.ok) {
-                    return response.json().then(err => Promise.reject(err));
+                    return response.json().then(err => {
+                        log('Create pin error:', err);
+                        return Promise.reject(err);
+                    });
                 }
                 return response.json();
             })
             .then(data => {
+                log('Pin created successfully:', data);
+                
                 if (data.id) {
                     alert(`✅ Pin created successfully!\n\nPin ID: ${data.id}\n\nView it on Pinterest!`);
                     pinForm.reset();
@@ -439,7 +507,9 @@
                 }
             })
             .catch(err => {
-                alert('❌ Failed to create pin: ' + (err.message || 'Unknown error'));
+                const errorMsg = err.message || JSON.stringify(err);
+                alert('❌ Failed to create pin: ' + errorMsg);
+                log('Pin creation failed:', err);
             })
             .finally(() => {
                 createBtn.disabled = false;
