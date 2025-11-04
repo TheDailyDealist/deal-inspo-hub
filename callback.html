@@ -213,6 +213,10 @@
             border-radius: 4px;
         }
 
+        .parse-info strong {
+            color: #1976D2;
+        }
+
         .loading-spinner {
             display: inline-block;
             width: 16px;
@@ -234,6 +238,16 @@
             border-radius: 12px;
             font-size: 11px;
             margin-left: 8px;
+        }
+
+        .back-link {
+            color: #666;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .back-link:hover {
+            color: #e60023;
         }
     </style>
 </head>
@@ -260,7 +274,7 @@
             <div id="empty-boards" class="empty-state hidden">
                 <div style="font-size: 48px;">📋</div>
                 <h4>No boards found</h4>
-                <p>Create your first board!</p>
+                <p style="margin: 10px 0;">Create your first board to get started!</p>
                 <button class="btn" onclick="showCreateBoard()">+ Create Board</button>
             </div>
         </div>
@@ -268,16 +282,23 @@
         <!-- Create Board Section -->
         <div id="create-board-section" class="section">
             <h3>📋 Create Board</h3>
+            <p style="margin-bottom: 15px; color: #666;">
+                Create a board to organize your deal pins
+            </p>
+            
             <form id="board-form">
                 <div class="form-group">
                     <label for="board-name">Board Name *</label>
                     <input type="text" id="board-name" required maxlength="100" 
-                        placeholder="e.g., Tech Deals">
+                        placeholder="e.g., Tech Deals, Fashion Finds">
+                    <small>Max 100 characters</small>
                 </div>
                 
                 <div class="form-group">
                     <label for="board-description">Description</label>
-                    <textarea id="board-description" maxlength="500"></textarea>
+                    <textarea id="board-description" maxlength="500" 
+                        placeholder="Describe what kind of deals you'll save here..."></textarea>
+                    <small>Max 500 characters (optional)</small>
                 </div>
                 
                 <button type="submit" class="btn btn-full" id="create-board-btn">
@@ -286,66 +307,69 @@
             </form>
             
             <div style="margin-top: 15px; text-align: center;">
-                <a href="#" onclick="showBoards(); return false;" style="color: #666;">← Cancel</a>
+                <a href="#" onclick="showBoards(); return false;" class="back-link">← Cancel</a>
             </div>
         </div>
         
         <!-- Create Pin Section -->
         <div id="create-pin-section" class="section">
             <h3>
-                <span>✨ Create Pin <span class="feature-badge">AI</span></span>
+                <span>✨ Create Optimized Pin <span class="feature-badge">AI-POWERED</span></span>
             </h3>
             <p style="margin-bottom: 15px; color: #666;">
                 Board: <strong id="selected-board-name"></strong>
             </p>
             
             <form id="pin-form">
+                <!-- Product URL Parser -->
                 <div class="form-group">
-                    <label for="product-url">🔗 Product URL</label>
+                    <label for="product-url">🔗 Product URL (Amazon, eBay, AliExpress, etc.)</label>
                     <div class="input-with-button">
                         <input type="url" id="product-url" 
-                            placeholder="https://www.amazon.com/...">
+                            placeholder="https://www.amazon.com/product/...">
                         <button type="button" class="btn btn-secondary" id="parse-btn">
-                            🤖 Parse
+                            🤖 Auto-Fill
                         </button>
                     </div>
-                    <small>Paste URL and click Parse to auto-fill</small>
+                    <small>Paste product URL and click "Auto-Fill" to extract details automatically</small>
                 </div>
 
                 <div id="parse-result" class="parse-info hidden">
-                    <strong>✅ Parsed!</strong>
+                    <strong>✅ Product Parsed Successfully!</strong>
                     <div id="parse-details"></div>
                 </div>
                 
+                <!-- Pin Details -->
                 <div class="form-group">
-                    <label for="pin-title">Title *</label>
-                    <input type="text" id="pin-title" required maxlength="100">
+                    <label for="pin-title">📝 Pin Title *</label>
+                    <input type="text" id="pin-title" required maxlength="100" 
+                        placeholder="Will be auto-filled from product URL">
+                    <small>Max 100 characters - Optimized for Pinterest SEO</small>
                 </div>
                 
                 <div class="form-group">
-                    <label for="pin-description">Description</label>
-                    <textarea id="pin-description" maxlength="500"></textarea>
+                    <label for="pin-description">📄 Description</label>
+                    <textarea id="pin-description" maxlength="500" 
+                        placeholder="Will be auto-generated with emojis and hashtags"></textarea>
+                    <small>Max 500 characters - Auto-generated but fully editable</small>
                 </div>
                 
                 <div class="form-group">
-                    <label for="pin-image-url">Image URL *</label>
-                    <input type="url" id="pin-image-url" required>
+                    <label for="pin-image-url">🖼️ Image URL *</label>
+                    <input type="url" id="pin-image-url" required 
+                        placeholder="Will be extracted from product page">
+                    <small>Auto-extracted image URL (must be publicly accessible)</small>
                 </div>
                 
                 <div class="form-group">
-                    <label for="pin-link">Link</label>
-                    <input type="url" id="pin-link">
-                </div>
-
-                <div class="form-group">
-                    <label>
-                        <input type="checkbox" id="optimize-image" checked>
-                        Add discount badge (if detected)
-                    </label>
+                    <label for="pin-link">🔗 Destination Link</label>
+                    <input type="url" id="pin-link" 
+                        placeholder="Where should this pin link to?">
+                    <small>Auto-filled from product URL (optional)</small>
                 </div>
                 
                 <div class="preview hidden" id="image-preview">
-                    <strong>Preview:</strong>
+                    <strong>🎨 Image Preview:</strong>
                     <img id="preview-img" src="" alt="Preview">
                 </div>
                 
@@ -355,12 +379,11 @@
             </form>
             
             <div style="margin-top: 15px; text-align: center;">
-                <a href="#" onclick="showBoards(); return false;" style="color: #666;">← Back</a>
+                <a href="#" onclick="showBoards(); return false;" class="back-link">← Back to boards</a>
             </div>
         </div>
     </div>
 
-    <!-- Подключаем JS файл -->
     <script src="js/main.js"></script>
 </body>
 </html>
