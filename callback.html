@@ -3,85 +3,283 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Connecting to Pinterest...</title>
+    <title>Deal Inspiration Hub - Pinterest Connected</title>
     <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         body { 
-            font-family: Arial, sans-serif; 
-            max-width: 600px; 
-            margin: 50px auto; 
-            text-align: center; 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            max-width: 800px; 
+            margin: 0 auto; 
             padding: 20px;
+            background: #f7f7f7;
             color: #333;
+        }
+        h1 { 
+            text-align: center; 
+            color: #e60023; 
+            margin-bottom: 10px;
+            font-size: 28px;
         }
         .status {
             padding: 15px;
             border-radius: 8px;
             margin: 20px 0;
-            font-weight: bold;
+            font-weight: 500;
+            text-align: center;
         }
         .loading { background-color: #eef; color: #3498db; border: 1px solid #3498db; }
         .error { background-color: #fee; color: #e60023; border: 1px solid #e60023; }
         .success { background-color: #efe; color: #28a745; border: 1px solid #28a745; }
-        #boards-container {
-            margin-top: 20px;
-            text-align: left;
+        
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
-        #boards-container h3 {
-            text-align: center;
+        
+        .section h3 {
+            color: #e60023;
+            margin-bottom: 15px;
+            font-size: 20px;
         }
+        
         #boards-list {
             list-style-type: none;
             padding: 0;
+            margin: 0;
         }
+        
         #boards-list li {
-            background: #f5f5f5;
-            padding: 10px;
-            border-radius: 5px;
-            margin-bottom: 8px;
-            border-left: 5px solid #bd081c;
+            background: #f9f9f9;
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 4px solid #e60023;
             cursor: pointer;
             transition: all 0.2s;
         }
+        
         #boards-list li:hover {
             background: #ececec;
             transform: translateX(5px);
         }
+        
+        #boards-list li.selected {
+            background: #fff0f3;
+            border-left-width: 6px;
+        }
+        
         .board-name {
             font-size: 16px;
-            font-weight: bold;
+            font-weight: 600;
             color: #333;
         }
+        
         .board-desc {
             font-size: 14px;
             color: #666;
             margin-top: 5px;
         }
+        
         .board-stats {
             font-size: 12px;
             color: #999;
             margin-top: 5px;
         }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #555;
+        }
+        
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+        
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        
+        .form-group small {
+            display: block;
+            margin-top: 5px;
+            color: #999;
+            font-size: 12px;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #e60023;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+        }
+        
+        .btn:hover:not(:disabled) {
+            background: #bd081c;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(230, 0, 35, 0.3);
+        }
+        
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .preview {
+            margin-top: 15px;
+            padding: 10px;
+            background: #f5f5f5;
+            border-radius: 6px;
+            border: 1px dashed #ddd;
+        }
+        
+        .preview img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        
+        #create-pin-section {
+            display: none;
+        }
+        
+        .hidden {
+            display: none;
+        }
     </style>
 </head>
 <body>
     <h1>🎉 Deal Inspiration Hub</h1>
-    <div id="status" class="loading">Connecting to your Pinterest account...</div>
-    <div id="boards-container"></div>
+    <div id="status" class="status loading">Connecting to your Pinterest account...</div>
+    
+    <!-- Boards Section -->
+    <div id="boards-section" class="section hidden">
+        <h3>📌 Your Pinterest Boards</h3>
+        <p style="margin-bottom: 15px; color: #666;">Select a board to create a pin:</p>
+        <ul id="boards-list"></ul>
+    </div>
+    
+    <!-- Create Pin Section -->
+    <div id="create-pin-section" class="section">
+        <h3>✨ Create a New Pin</h3>
+        <p style="margin-bottom: 15px; color: #666;">
+            Selected board: <strong id="selected-board-name"></strong>
+        </p>
+        
+        <form id="pin-form">
+            <div class="form-group">
+                <label for="pin-title">Pin Title *</label>
+                <input type="text" id="pin-title" required maxlength="100" 
+                    placeholder="e.g., Amazing Deal on Wireless Headphones">
+                <small>Max 100 characters</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="pin-description">Description</label>
+                <textarea id="pin-description" maxlength="500" 
+                    placeholder="Add details about this deal..."></textarea>
+                <small>Max 500 characters (optional)</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="pin-image-url">Image URL *</label>
+                <input type="url" id="pin-image-url" required 
+                    placeholder="https://example.com/image.jpg">
+                <small>Direct link to the image (must be publicly accessible)</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="pin-link">Destination Link</label>
+                <input type="url" id="pin-link" 
+                    placeholder="https://example.com/product">
+                <small>Where the pin should link to (optional)</small>
+            </div>
+            
+            <div class="preview hidden" id="image-preview">
+                <strong>Image Preview:</strong>
+                <img id="preview-img" src="" alt="Preview">
+            </div>
+            
+            <button type="submit" class="btn" id="create-btn">
+                Create Pin on Pinterest
+            </button>
+        </form>
+        
+        <div style="margin-top: 15px; text-align: center;">
+            <a href="#" onclick="showBoards(); return false;" 
+                style="color: #666; font-size: 14px;">← Back to boards</a>
+        </div>
+    </div>
 
     <script>
         const statusDiv = document.getElementById('status');
-        const boardsContainer = document.getElementById('boards-container');
+        const boardsSection = document.getElementById('boards-section');
+        const createPinSection = document.getElementById('create-pin-section');
+        const boardsList = document.getElementById('boards-list');
+        const pinForm = document.getElementById('pin-form');
+        const createBtn = document.getElementById('create-btn');
+        const imageUrlInput = document.getElementById('pin-image-url');
+        const imagePreview = document.getElementById('image-preview');
+        const previewImg = document.getElementById('preview-img');
 
         // Backend URLs
         const TOKEN_URL = 'https://exploreandbook-legal.netlify.app/.netlify/functions/pinterest-token';
         const PROXY_URL = 'https://exploreandbook-legal.netlify.app/.netlify/functions/pinterest-proxy';
+        const CREATE_PIN_URL = 'https://exploreandbook-legal.netlify.app/.netlify/functions/pinterest-create-pin';
         
-        // Получаем параметры из URL
+        let accessToken = null;
+        let selectedBoardId = null;
+        let selectedBoardName = null;
+        let boards = [];
+
+        // Image preview
+        imageUrlInput.addEventListener('input', function() {
+            const url = this.value.trim();
+            if (url && isValidUrl(url)) {
+                previewImg.src = url;
+                imagePreview.classList.remove('hidden');
+            } else {
+                imagePreview.classList.add('hidden');
+            }
+        });
+
+        function isValidUrl(string) {
+            try {
+                new URL(string);
+                return true;
+            } catch (_) {
+                return false;  
+            }
+        }
+
+        // Get URL parameters
         const urlParams = new URLSearchParams(window.location.search);
         const code = urlParams.get('code');
         const error = urlParams.get('error');
 
-        // Обработка ответа от Pinterest
         if (error) {
             statusDiv.className = 'status error';
             statusDiv.textContent = `❌ Authorization failed: ${error}`;
@@ -92,7 +290,6 @@
             statusDiv.textContent = '❌ No authorization code found.';
         }
 
-        // Обмен кода на токен
         function exchangeCodeForToken(authCode) {
             fetch(TOKEN_URL, {
                 method: 'POST',
@@ -107,31 +304,27 @@
             })
             .then(data => {
                 if (data.access_token) {
+                    accessToken = data.access_token;
+                    localStorage.setItem('pinterest_access_token', accessToken);
+                    
                     statusDiv.className = 'status success';
                     statusDiv.textContent = '✅ Connected successfully! Loading your boards...';
                     
-                    localStorage.setItem('pinterest_access_token', data.access_token);
-                    
-                    // Небольшая задержка для UX
                     setTimeout(() => {
-                        fetchAndDisplayBoards(data.access_token);
+                        fetchBoards();
                     }, 500);
-
                 } else {
                     throw new Error('Could not connect to Pinterest. Please try again.');
                 }
             })
             .catch(err => {
                 statusDiv.className = 'status error';
-                const errorMessage = err.error_description || err.message || 'Connection failed. Please try again.';
+                const errorMessage = err.error_description || err.message || 'Connection failed.';
                 statusDiv.textContent = `❌ ${errorMessage}`;
             });
         }
 
-        // Получение и отображение досок
-        function fetchAndDisplayBoards(accessToken) {
-            boardsContainer.innerHTML = '<h3>📌 Loading your Pinterest boards...</h3>';
-
+        function fetchBoards() {
             fetch(`${PROXY_URL}?endpoint=boards`, {
                 method: 'GET',
                 headers: {
@@ -145,48 +338,114 @@
                 return response.json();
             })
             .then(data => {
-                if (data.items) {
-                    statusDiv.style.display = 'none'; // Скрываем статус после успеха
-                    
-                    let boardsHtml = '<h3>📌 Your Pinterest Boards</h3><ul id="boards-list">';
-                    
-                    if (data.items.length > 0) {
-                        data.items.forEach(board => {
-                            boardsHtml += `
-                                <li onclick="selectBoard('${board.id}', '${board.name}')">
-                                    <div class="board-name">${board.name}</div>
-                                    ${board.description ? `<div class="board-desc">${board.description}</div>` : ''}
-                                    <div class="board-stats">
-                                        ${board.pin_count || 0} pins • ${board.follower_count || 0} followers
-                                    </div>
-                                </li>
-                            `;
-                        });
-                    } else {
-                        boardsHtml += '<li>You don\'t have any boards yet. Create one on Pinterest!</li>';
-                    }
-                    
-                    boardsHtml += '</ul>';
-                    boardsContainer.innerHTML = boardsHtml;
+                if (data.items && data.items.length > 0) {
+                    boards = data.items;
+                    displayBoards();
+                    statusDiv.style.display = 'none';
+                    boardsSection.classList.remove('hidden');
                 } else {
-                    throw new Error('Could not load boards data.');
+                    throw new Error('No boards found. Create a board on Pinterest first.');
                 }
             })
             .catch(err => {
-                boardsContainer.innerHTML = `
-                    <div class="status error">
-                        Failed to load boards. Please refresh the page and try again.
-                    </div>
-                `;
+                statusDiv.className = 'status error';
+                statusDiv.textContent = '❌ Failed to load boards. Please try again.';
             });
         }
 
-        // Функция выбора доски (для будущего функционала)
-        function selectBoard(boardId, boardName) {
-            console.log(`Selected board: ${boardName} (${boardId})`);
-            // Здесь можно добавить переход к просмотру пинов доски
-            alert(`You selected: ${boardName}\n\nNext step: View pins from this board!`);
+        function displayBoards() {
+            boardsList.innerHTML = '';
+            boards.forEach(board => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <div class="board-name">${board.name}</div>
+                    ${board.description ? `<div class="board-desc">${board.description}</div>` : ''}
+                    <div class="board-stats">
+                        ${board.pin_count || 0} pins • ${board.follower_count || 0} followers
+                    </div>
+                `;
+                li.onclick = () => selectBoard(board.id, board.name);
+                boardsList.appendChild(li);
+            });
         }
+
+        function selectBoard(boardId, boardName) {
+            selectedBoardId = boardId;
+            selectedBoardName = boardName;
+            document.getElementById('selected-board-name').textContent = boardName;
+            
+            boardsSection.classList.add('hidden');
+            createPinSection.style.display = 'block';
+        }
+
+        function showBoards() {
+            createPinSection.style.display = 'none';
+            boardsSection.classList.remove('hidden');
+            pinForm.reset();
+            imagePreview.classList.add('hidden');
+        }
+
+        pinForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const title = document.getElementById('pin-title').value.trim();
+            const description = document.getElementById('pin-description').value.trim();
+            const imageUrl = document.getElementById('pin-image-url').value.trim();
+            const link = document.getElementById('pin-link').value.trim();
+
+            if (!title || !imageUrl) {
+                alert('Please fill in title and image URL');
+                return;
+            }
+
+            createBtn.disabled = true;
+            createBtn.textContent = 'Creating Pin...';
+
+            const pinData = {
+                board_id: selectedBoardId,
+                title: title,
+                media_source: imageUrl
+            };
+
+            if (description) pinData.description = description;
+            if (link) pinData.link = link;
+
+            fetch(CREATE_PIN_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken}`
+                },
+                body: JSON.stringify(pinData)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => Promise.reject(err));
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.id) {
+                    alert(`✅ Pin created successfully!\n\nPin ID: ${data.id}\n\nView it on Pinterest!`);
+                    pinForm.reset();
+                    imagePreview.classList.add('hidden');
+                    
+                    // Open the pin on Pinterest
+                    if (data.id) {
+                        window.open(`https://www.pinterest.com/pin/${data.id}/`, '_blank');
+                    }
+                } else {
+                    throw new Error('Pin created but no ID returned');
+                }
+            })
+            .catch(err => {
+                alert('❌ Failed to create pin: ' + (err.message || 'Unknown error'));
+            })
+            .finally(() => {
+                createBtn.disabled = false;
+                createBtn.textContent = 'Create Pin on Pinterest';
+            });
+        });
     </script>
 </body>
 </html>
