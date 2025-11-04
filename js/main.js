@@ -4,7 +4,6 @@ const PROXY_URL = 'https://exploreandbook-legal.netlify.app/.netlify/functions/p
 const CREATE_PIN_URL = 'https://exploreandbook-legal.netlify.app/.netlify/functions/pinterest-create-pin';
 const CREATE_BOARD_URL = 'https://exploreandbook-legal.netlify.app/.netlify/functions/pinterest-create-board';
 const PARSE_PRODUCT_URL = 'https://exploreandbook-legal.netlify.app/.netlify/functions/parse-product';
-const OPTIMIZE_IMAGE_URL = 'https://exploreandbook-legal.netlify.app/.netlify/functions/optimize-image';
 
 // DOM Elements
 const statusDiv = document.getElementById('status');
@@ -291,9 +290,8 @@ pinForm.addEventListener('submit', async function(e) {
     
     const title = document.getElementById('pin-title').value.trim();
     const description = document.getElementById('pin-description').value.trim();
-    let imageUrl = document.getElementById('pin-image-url').value.trim();
+    const imageUrl = document.getElementById('pin-image-url').value.trim();
     const link = document.getElementById('pin-link').value.trim();
-    const optimize = document.getElementById('optimize-image').checked;
     
     if (!title || !imageUrl) {
         alert('Title and image required');
@@ -304,28 +302,6 @@ pinForm.addEventListener('submit', async function(e) {
     createPinBtn.innerHTML = '<span class="loading-spinner"></span> Creating...';
     
     try {
-        // Optimize image if needed
-        if (optimize && parsedProduct && parsedProduct.discount) {
-            log('Optimizing image...');
-            try {
-                const optRes = await fetch(OPTIMIZE_IMAGE_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        imageUrl: imageUrl,
-                        discount: parsedProduct.discount
-                    })
-                });
-                const optData = await optRes.json();
-                if (optData.success && optData.data.optimizedImage) {
-                    imageUrl = optData.data.optimizedImage;
-                    log('✅ Image optimized');
-                }
-            } catch (err) {
-                log('⚠️ Optimization failed');
-            }
-        }
-        
         const res = await fetch(CREATE_PIN_URL, {
             method: 'POST',
             headers: {
@@ -343,7 +319,7 @@ pinForm.addEventListener('submit', async function(e) {
         const data = await res.json();
         
         if (data.id) {
-            alert(`✅ Pin created!\n\nID: ${data.id}\nBoard: ${selectedBoardName}`);
+            alert(`✅ Pin created!\n\nID: ${data.id}\nBoard: ${selectedBoardName}\n\n⚠️ Sandbox mode`);
             pinForm.reset();
             imagePreview.classList.add('hidden');
             parseResult.classList.add('hidden');
