@@ -41,6 +41,7 @@
         .loading { background-color: #eef; color: #3498db; border: 1px solid #3498db; }
         .error { background-color: #fee; color: #e60023; border: 1px solid #e60023; }
         .success { background-color: #efe; color: #28a745; border: 1px solid #28a745; }
+        .warning { background-color: #fff3cd; color: #856404; border: 1px solid #ffc107; }
         
         .section {
             background: white;
@@ -157,6 +158,15 @@
             background: #ccc;
             cursor: not-allowed;
         }
+
+        .btn-secondary {
+            background: #6c757d;
+            margin-top: 10px;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: #5a6268;
+        }
         
         .preview {
             margin-top: 15px;
@@ -173,7 +183,7 @@
             margin-top: 10px;
         }
         
-        #create-pin-section {
+        #create-pin-section, #create-board-section {
             display: none;
         }
         
@@ -203,6 +213,18 @@
         .debug-info div:last-child {
             border-bottom: none;
         }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+        }
+
+        .empty-state img {
+            width: 100px;
+            opacity: 0.5;
+            margin-bottom: 20px;
+        }
     </style>
 </head>
 <body>
@@ -218,6 +240,46 @@
         <h3>📌 Your Pinterest Boards</h3>
         <p style="margin-bottom: 15px; color: #666;">Select a board to create a pin:</p>
         <ul id="boards-list"></ul>
+        
+        <div id="empty-boards" class="empty-state hidden">
+            <div style="font-size: 48px; margin-bottom: 15px;">📋</div>
+            <h4>No boards found in Sandbox</h4>
+            <p style="margin: 15px 0;">Create a test board to get started!</p>
+            <button class="btn" onclick="showCreateBoard()">+ Create Test Board</button>
+        </div>
+    </div>
+
+    <!-- Create Board Section -->
+    <div id="create-board-section" class="section">
+        <h3>📋 Create Test Board</h3>
+        <p style="margin-bottom: 15px; color: #666;">
+            Create a board in the Pinterest Sandbox for testing
+        </p>
+        
+        <form id="board-form">
+            <div class="form-group">
+                <label for="board-name">Board Name *</label>
+                <input type="text" id="board-name" required maxlength="100" 
+                    placeholder="e.g., My Deals Board">
+                <small>Max 100 characters</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="board-description">Description</label>
+                <textarea id="board-description" maxlength="500" 
+                    placeholder="Description of this board..."></textarea>
+                <small>Max 500 characters (optional)</small>
+            </div>
+            
+            <button type="submit" class="btn" id="create-board-btn">
+                Create Board
+            </button>
+        </form>
+        
+        <div style="margin-top: 15px; text-align: center;">
+            <a href="#" onclick="showBoards(); return false;" 
+                style="color: #666; font-size: 14px;">← Cancel</a>
+        </div>
     </div>
     
     <!-- Create Pin Section -->
@@ -245,7 +307,7 @@
             <div class="form-group">
                 <label for="pin-image-url">Image URL *</label>
                 <input type="url" id="pin-image-url" required 
-                    placeholder="https://example.com/image.jpg">
+                    placeholder="https://i.pinimg.com/originals/...">
                 <small>Direct link to the image (must be publicly accessible)</small>
             </div>
             
@@ -261,7 +323,7 @@
                 <img id="preview-img" src="" alt="Preview">
             </div>
             
-            <button type="submit" class="btn" id="create-btn">
+            <button type="submit" class="btn" id="create-pin-btn">
                 Create Pin on Pinterest Sandbox
             </button>
         </form>
@@ -275,10 +337,14 @@
     <script>
         const statusDiv = document.getElementById('status');
         const boardsSection = document.getElementById('boards-section');
+        const createBoardSection = document.getElementById('create-board-section');
         const createPinSection = document.getElementById('create-pin-section');
         const boardsList = document.getElementById('boards-list');
+        const emptyBoards = document.getElementById('empty-boards');
         const pinForm = document.getElementById('pin-form');
-        const createBtn = document.getElementById('create-btn');
+        const boardForm = document.getElementById('board-form');
+        const createPinBtn = document.getElementById('create-pin-btn');
+        const createBoardBtn = document.getElementById('create-board-btn');
         const imageUrlInput = document.getElementById('pin-image-url');
         const imagePreview = document.getElementById('image-preview');
         const previewImg = document.getElementById('preview-img');
@@ -288,6 +354,7 @@
         const TOKEN_URL = 'https://exploreandbook-legal.netlify.app/.netlify/functions/pinterest-token';
         const PROXY_URL = 'https://exploreandbook-legal.netlify.app/.netlify/functions/pinterest-proxy';
         const CREATE_PIN_URL = 'https://exploreandbook-legal.netlify.app/.netlify/functions/pinterest-create-pin';
+        const CREATE_BOARD_URL = 'https://exploreandbook-legal.netlify.app/.netlify/functions/pinterest-create-board';
         
         let accessToken = null;
         let selectedBoardId = null;
@@ -439,10 +506,16 @@
                     displayBoards();
                     statusDiv.style.display = 'none';
                     boardsSection.classList.remove('hidden');
-                } else if (data.message) {
-                    throw new Error(data.message);
+                    emptyBoards.classList.add('hidden');
                 } else {
-                    throw new Error('No boards found. Create a board on Pinterest first.');
+                    log('⚠️ No boards found - showing create board option');
+                    statusDiv.className = 'status warning';
+                    statusDiv.textContent = '⚠️ No boards found in Sandbox. Create a test board to continue.';
+                    setTimeout(() => {
+                        statusDiv.style.display = 'none';
+                        boardsSection.classList.remove('hidden');
+                        emptyBoards.classList.remove('hidden');
+                    }, 2000);
                 }
             })
             .catch(err => {
@@ -482,12 +555,94 @@
 
         function showBoards() {
             createPinSection.style.display = 'none';
+            createBoardSection.style.display = 'none';
             boardsSection.classList.remove('hidden');
             pinForm.reset();
+            boardForm.reset();
             imagePreview.classList.add('hidden');
             log('← Returned to boards list');
         }
 
+        function showCreateBoard() {
+            boardsSection.classList.add('hidden');
+            createBoardSection.style.display = 'block';
+            log('→ Opening create board form');
+        }
+
+        // Create Board Handler
+        boardForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('board-name').value.trim();
+            const description = document.getElementById('board-description').value.trim();
+
+            if (!name) {
+                alert('Please enter board name');
+                return;
+            }
+
+            log('📤 Creating board...', { name, description });
+
+            createBoardBtn.disabled = true;
+            createBoardBtn.textContent = 'Creating Board...';
+
+            const boardData = {
+                name: name
+            };
+
+            if (description) boardData.description = description;
+
+            fetch(CREATE_BOARD_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken}`
+                },
+                body: JSON.stringify(boardData)
+            })
+            .then(response => {
+                log(`📥 Create board response status: ${response.status}`);
+                return response.text();
+            })
+            .then(text => {
+                log('📄 Create board response (raw):', text);
+                
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (e) {
+                    log('❌ Failed to parse create board response as JSON');
+                    throw new Error('Server returned invalid response: ' + text.substring(0, 100));
+                }
+                
+                log('✅ Board response parsed:', data);
+                
+                if (data.id) {
+                    log('✅ Board created successfully! ID:', data.id);
+                    alert(`✅ Board created successfully!\n\nBoard: ${data.name}\nID: ${data.id}`);
+                    boardForm.reset();
+                    
+                    // Refresh boards list
+                    fetchBoards();
+                    showBoards();
+                } else if (data.message) {
+                    throw new Error(data.message);
+                } else {
+                    throw new Error('Board creation returned unexpected response');
+                }
+            })
+            .catch(err => {
+                const errorMsg = err.message || 'Unknown error';
+                alert('❌ Failed to create board: ' + errorMsg);
+                log('❌ Board creation failed:', err);
+            })
+            .finally(() => {
+                createBoardBtn.disabled = false;
+                createBoardBtn.textContent = 'Create Board';
+            });
+        });
+
+        // Create Pin Handler
         pinForm.addEventListener('submit', function(e) {
             e.preventDefault();
             
@@ -504,8 +659,8 @@
 
             log('📤 Creating pin...', { title, imageUrl, boardId: selectedBoardId });
 
-            createBtn.disabled = true;
-            createBtn.textContent = 'Creating Pin...';
+            createPinBtn.disabled = true;
+            createPinBtn.textContent = 'Creating Pin...';
 
             const pinData = {
                 board_id: selectedBoardId,
@@ -560,8 +715,8 @@
                 log('❌ Pin creation failed:', err);
             })
             .finally(() => {
-                createBtn.disabled = false;
-                createBtn.textContent = 'Create Pin on Pinterest Sandbox';
+                createPinBtn.disabled = false;
+                createPinBtn.textContent = 'Create Pin on Pinterest Sandbox';
             });
         });
     </script>
